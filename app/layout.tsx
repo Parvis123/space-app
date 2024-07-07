@@ -2,12 +2,14 @@
 
 import React from "react";
 
+import { ThemeProvider } from "@mui/material";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Inter } from "next/font/google";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-import type { Metadata } from "next";
 import "./globals.css";
+
+import theme from "./theme";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,9 +27,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <QueryClientProvider client={queryClient}>
-        <body className={inter.className}>{children}</body>
-      </QueryClientProvider>
+      <AppRouterCacheProvider>
+        <ThemeProvider theme={theme}>
+          <QueryClientProvider client={queryClient}>
+            <body className={inter.className}>{children}</body>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </AppRouterCacheProvider>
     </html>
   );
 }
