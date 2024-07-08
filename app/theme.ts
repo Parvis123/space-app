@@ -6,27 +6,56 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     background: {
-      default: "#000",
-      paper: "#1A1A1A",
+      default: "#0d0d0d",
+      paper: "#1c1c1c",
     },
     primary: {
-      main: "#90CAF9",
+      main: "#FFD700",
     },
     secondary: {
-      main: "#F48FB1",
+      main: "#03dac6",
     },
     text: {
-      primary: "#FFFFFF",
-      secondary: "#B3B3B3",
+      primary: "#ffffff",
+      secondary: "#d0d0d0",
     },
   },
   typography: {
     fontFamily: "Roboto, Arial, sans-serif",
     h1: {
-      color: "#FFFFFF",
+      color: "#ffffff",
+      fontWeight: 700,
+    },
+    h2: {
+      color: "#ffffff",
+      fontWeight: 600,
+    },
+    h3: {
+      color: "#ffffff",
+      fontWeight: 500,
     },
     body1: {
-      color: "#B3B3B3",
+      color: "#d0d0d0",
+    },
+    button: {
+      textTransform: "none",
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#1c1c1c",
+          color: "#ffffff",
+        },
+      },
     },
   },
 });

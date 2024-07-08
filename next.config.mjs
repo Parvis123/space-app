@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["apod.nasa.gov, www.youtube.com"],
     remotePatterns: [
       {
         protocol: "https",
