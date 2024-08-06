@@ -10,6 +10,18 @@ const nextConfig = {
         protocol: "https",
         hostname: "www.youtube.com",
       },
+      {
+        protocol: "https",
+        hostname: "mars.nasa.gov",
+      },
+      {
+        protocol: "http",
+        hostname: "mars.jpl.nasa.gov",
+      },
+      {
+        protocol: "https",
+        hostname: "mars.jpl.nasa.gov",
+      },
     ],
   },
 };

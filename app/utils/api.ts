@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
-const API_KEY = "Jco8mMHVqbsEqMEEeEaik4maHkQ2IU4db75aV8CJ";
+import { NASA_API_KEY } from "../constants";
 
 const fetchData = async (date: string) => {
   console.log(`Requesting data for date: ${date}`);
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&date=${date}`;
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${NASA_API_KEY}&date=${date}`;
 
   try {
     const response = await fetch(url);
