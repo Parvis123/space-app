@@ -20,6 +20,10 @@
     "prefer-template": "error",
     "no-var": "error",
     "prefer-const": "error",
+    "react/require-default-props": [
+      "error",
+      { "ignoreFunctionalComponents": true }
+    ],
     "import/order": [
       "warn",
       {

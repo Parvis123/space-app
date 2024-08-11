@@ -2,25 +2,24 @@
 
 import { useState } from "react";
 
-import ArrowBackIosSharpIcon from "@mui/icons-material/ArrowBackIosSharp";
-import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
+import InfoIcon from "@mui/icons-material/Info";
 import {
   Grid,
   Typography,
   Box,
   Button,
   Container,
-  IconButton,
-  Tooltip,
   CircularProgress,
   useTheme,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import Image from "next/image";
 
+import DateController from "../components/DateController";
+import Navbar from "../components/Navbar";
 import fetchData from "../utils/api";
 
 const APODPage = () => {
@@ -29,15 +28,13 @@ const APODPage = () => {
   const yesterday = dayjs().subtract(1, "day");
   const minDate = dayjs().subtract(3, "month");
 
-  const [selectedDate, setSelectedDate] = useState<string>(
-    yesterday.format("YYYY-MM-DD")
-  );
+  const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs>(yesterday);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [imageLoading, setImageLoading] = useState<boolean>(true);
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ["apod", selectedDate],
-    queryFn: () => fetchData(selectedDate),
+    queryKey: ["apod", selectedDate.format("YYYY-MM-DD")],
+    queryFn: () => fetchData(selectedDate.format("YYYY-MM-DD")),
     refetchOnWindowFocus: true,
   });
 
@@ -49,29 +46,18 @@ const APODPage = () => {
     setImageLoading(false);
   };
 
-  const handlePreviousDay = () => {
-    setSelectedDate(
-      dayjs(selectedDate).subtract(1, "day").format("YYYY-MM-DD")
-    );
-    setImageLoading(true);
-  };
-
-  const handleNextDay = () => {
-    setSelectedDate(dayjs(selectedDate).add(1, "day").format("YYYY-MM-DD"));
-    setImageLoading(true);
-  };
-
   if (isLoading)
     return (
       <div className="starfield">
         <Container
           maxWidth="xl"
           sx={{
-            mt: 2,
+            mt: 8,
+            pt: 2,
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "80vh",
+            height: "calc(100vh - 64px)",
           }}
         >
           <CircularProgress />
@@ -83,106 +69,33 @@ const APODPage = () => {
 
   return (
     <div className="starfield">
-      <Container maxWidth="xl" sx={{ mt: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          {dayjs(selectedDate).isSame(minDate, "day") ? (
-            <Tooltip title="No more images hosted beyond this date">
-              <span>
-                <IconButton
-                  aria-label="previous day"
-                  onClick={handlePreviousDay}
-                  disabled
-                >
-                  <ArrowBackIosSharpIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <IconButton aria-label="previous day" onClick={handlePreviousDay}>
-              <ArrowBackIosSharpIcon />
-            </IconButton>
-          )}
-          <Typography variant="h3">
-            {dayjs(selectedDate).format("MMMM D, YYYY")}
+      <Navbar />
+      <Container maxWidth="xl" sx={{ mt: 8, pt: 2 }}>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography
+            variant="h2"
+            component="h1"
+            sx={{ color: "white", mr: 1 }}
+          >
+            Astronomy Picture of the Day
           </Typography>
-          {dayjs(selectedDate).isSame(yesterday, "day") ? (
-            <Tooltip title="This image is not yet published by NASA">
-              <span>
-                <IconButton
-                  aria-label="next day"
-                  onClick={handleNextDay}
-                  disabled
-                >
-                  <ArrowForwardIosSharpIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-          ) : (
-            <IconButton aria-label="next day" onClick={handleNextDay}>
-              <ArrowForwardIosSharpIcon />
+          <Tooltip title="Daily astronomy pictures and descriptions provided by NASA.">
+            <IconButton size="small">
+              <InfoIcon sx={{ color: "white" }} />
             </IconButton>
-          )}
+          </Tooltip>
         </Box>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mb: 2,
-            height: 56,
-            width: "100%",
+        <DateController
+          selectedDate={selectedDate}
+          onDateChange={(newDate) => {
+            setSelectedDate(newDate);
+            setImageLoading(true);
           }}
-        >
-          {showDatePicker ? (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  value={dayjs(selectedDate)}
-                  onChange={(newValue) => {
-                    const newDate = dayjs(newValue);
-                    if (
-                      newDate.isAfter(minDate) &&
-                      newDate.isBefore(yesterday)
-                    ) {
-                      setSelectedDate(newDate.format("YYYY-MM-DD"));
-                      setImageLoading(true);
-                    }
-                  }}
-                  minDate={minDate}
-                  maxDate={yesterday}
-                  disableFuture
-                />
-              </LocalizationProvider>
-              <Button
-                onClick={() => setShowDatePicker(false)}
-                sx={{ minWidth: "auto" }}
-              >
-                Hide
-              </Button>
-            </Box>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={() => setShowDatePicker(true)}
-              sx={{ height: 45, width: "auto", minWidth: "auto" }}
-            >
-              Show Date Picker
-            </Button>
-          )}
-        </Box>
+          minDate={minDate}
+          maxDate={yesterday}
+          showDatePicker={showDatePicker}
+          onToggleDatePicker={() => setShowDatePicker(!showDatePicker)}
+        />
         <Grid container spacing={4} alignItems="flex-start">
           <Grid item xs={12} md={8}>
             <Box
@@ -232,7 +145,7 @@ const APODPage = () => {
                   objectFit="contain"
                   onLoad={handleImageLoad}
                   style={{
-                    backgroundColor: "black", // Match this to the predominant background color of the image
+                    backgroundColor: "black",
                   }}
                 />
               )}

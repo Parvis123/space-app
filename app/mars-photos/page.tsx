@@ -8,15 +8,17 @@ import {
   Grid,
   CircularProgress,
   Box,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Tooltip,
+  IconButton,
+  Alert,
 } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
+import dayjs from "dayjs";
 
 import Navbar from "../components/Navbar";
+import DateController from "../components/DateController";
+import MarsPhotoItem from "../components/MarsPhotoItem";
 import { NASA_API_KEY } from "../constants";
 
 interface MarsPhoto {
@@ -28,109 +30,91 @@ interface MarsPhoto {
   };
 }
 
-const fetchMarsPhotos = async (rover: string, sol: number) => {
-  const url = `https://api.nasa.gov/mars-photos/api/v1/rovers/${rover}/photos?sol=${sol}&api_key=${NASA_API_KEY}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("Failed to fetch Mars photos");
-  }
-  return response.json();
-};
-
 const MarsPhotosPage = () => {
-  const [rover, setRover] = useState("curiosity");
-  const [sol, setSol] = useState(1000);
+  const maxDate = dayjs("2015-06-03");
+  const minDate = dayjs("2012-08-06");
+  const [selectedDate, setSelectedDate] = useState(maxDate);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const fetchMarsPhotos = async (date: dayjs.Dayjs) => {
+    const formattedDate = date.format("YYYY-MM-DD");
+    const url = `https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=${formattedDate}&api_key=${NASA_API_KEY}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Failed to fetch Mars photos");
+    }
+    return response.json();
+  };
 
   const { data, error, isLoading } = useQuery({
-    queryKey: ["marsPhotos", rover, sol],
-    queryFn: () => fetchMarsPhotos(rover, sol),
+    queryKey: ["marsPhotos", selectedDate.format("YYYY-MM-DD")],
+    queryFn: () => fetchMarsPhotos(selectedDate),
   });
-
-  if (isLoading) {
-    return (
-      <div className="starfield">
-        <Container
-          maxWidth="xl"
-          sx={{
-            mt: 2,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            height: "80vh",
-          }}
-        >
-          <CircularProgress />
-        </Container>
-      </div>
-    );
-  }
-
-  if (error instanceof Error) {
-    return <Typography>An error occurred: {error.message}</Typography>;
-  }
 
   return (
     <>
-      <Navbar />
       <div
-        className="starfield"
-        style={{ position: "fixed", inset: 0, zIndex: -1 }}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundImage: "url('/mars.bmp')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          zIndex: -1,
+        }}
       />
+      <Navbar />
       <Container maxWidth="xl" sx={{ mt: 8, mb: 5, pb: 5 }}>
-        <Typography variant="h2" component="h1" gutterBottom>
-          Mars Rover Photos
-        </Typography>
-        <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel id="rover-select-label">Rover</InputLabel>
-            <Select
-              labelId="rover-select-label"
-              value={rover}
-              label="Rover"
-              onChange={(e) => setRover(e.target.value)}
-            >
-              {["curiosity", "opportunity", "spirit"].map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value.charAt(0).toUpperCase() + value.slice(1)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel id="sol-select-label">Sol</InputLabel>
-            <Select
-              labelId="sol-select-label"
-              value={sol}
-              label="Sol"
-              onChange={(e) => setSol(Number(e.target.value))}
-            >
-              {[1, 10, 100, 1000, 2000].map((value) => (
-                <MenuItem key={value} value={value}>
-                  {value}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography
+            variant="h2"
+            component="h1"
+            sx={{ color: "white", mr: 1 }}
+          >
+            Mars Rover Photos
+          </Typography>
+          <Tooltip
+            title={`Photos captured by NASA's Curiosity Rover, available from ${minDate.format(
+              "MMMM D, YYYY"
+            )} to  to ${maxDate.format("MMMM D, YYYY")}.`}
+          >
+            <IconButton size="small">
+              <InfoIcon sx={{ color: "white" }} />
+            </IconButton>
+          </Tooltip>
         </Box>
-        <Grid container spacing={3}>
-          {data?.photos?.slice(0, 9).map((photo: MarsPhoto) => (
-            <Grid item xs={12} sm={6} md={4} key={photo.id}>
-              <Box sx={{ position: "relative", paddingTop: "75%", mb: 2 }}>
-                <Image
-                  src={photo.img_src.replace("http:", "https:")}
-                  alt={`Mars photo taken by ${photo.camera.full_name}`}
-                  fill
-                  style={{ objectFit: "cover" }}
-                />
-              </Box>
-              <Typography variant="body2">
-                Date: {photo.earth_date}
-                <br />
-                Camera: {photo.camera.full_name}
-              </Typography>
-            </Grid>
-          ))}
-        </Grid>
+        <DateController
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          minDate={minDate}
+          maxDate={maxDate}
+          showDatePicker={showDatePicker}
+          onToggleDatePicker={() => setShowDatePicker(!showDatePicker)}
+        />
+        {isLoading ? (
+          <Box display="flex" justifyContent="center" my={4}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            An error occurred while fetching photos:{" "}
+            {error instanceof Error ? error.message : "Unknown error"}
+          </Alert>
+        ) : data?.photos && data.photos.length > 0 ? (
+          <Grid container spacing={3}>
+            {data.photos.slice(0, 9).map((photo: MarsPhoto) => (
+              <MarsPhotoItem key={photo.id} photo={photo} />
+            ))}
+          </Grid>
+        ) : (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            No photos available for {selectedDate.format("MMMM D, YYYY")}.
+            Please try another date.
+          </Alert>
+        )}
       </Container>
     </>
   );
